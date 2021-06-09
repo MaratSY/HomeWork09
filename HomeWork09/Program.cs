@@ -12,7 +12,7 @@ namespace HomeWork09
 
         static void Main(string[] args)
         {
-            string token = "1849814420:AAFOifoC5c5ePYcOeATTdRWHSNdW0PrO2lA";
+            string token = "";
 
             tgBot = new (token) { Timeout = TimeSpan.FromSeconds(1) };
 
