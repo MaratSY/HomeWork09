@@ -66,7 +66,7 @@ namespace HomeWork09
         private static async void DownloadDocumentOnLocalStorage(string fileId, string path)
         {
             var file = tgBot.GetFileAsync(fileId);
-            using (FileStream fs = new($@"C:\Users\shari\source\repos\HomeWork09\Download\{path}", FileMode.Create))
+            using (FileStream fs = new($@"Download\{path}", FileMode.Create))
             {
                 await tgBot.DownloadFileAsync(file.Result.FilePath, fs);
             }
@@ -77,14 +77,15 @@ namespace HomeWork09
         /// <param name="chatId"></param>
         private static void GetAllFiles(long chatId)
         {
-            var localpath = @"C:\Users\shari\source\repos\HomeWork09\Download";
+            var localpath = @"Download";
             var files = Directory.EnumerateFiles(localpath);
-
+            var message = "Все доступные файлы:\n";
             foreach (var file in files)
             {
-                var fileName = file.Remove(0, localpath.Length);
-                tgBot.SendTextMessageAsync(chatId, fileName);
+                message += file.Remove(0, localpath.Length+1)+"\n";
+                
             }
+            tgBot.SendTextMessageAsync(chatId, message);
         }
 
 
