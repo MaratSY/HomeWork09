@@ -3,34 +3,40 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Telegram.Bot;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace HomeWork09
 {
     class Program
     {
         private static TelegramBotClient tgBot;
+        //static InlineKeyboardMarkup buttons;
+        static string path = @"Download\";
 
         static void Main(string[] args)
         {
-            string token = "";
+            string token = "1849814420:AAFOifoC5c5ePYcOeATTdRWHSNdW0PrO2lA";
 
-            tgBot = new (token) { Timeout = TimeSpan.FromSeconds(1) };
+            tgBot = new(token) { Timeout = TimeSpan.FromSeconds(1) };
+            //InlineKeyboardButton chooseDocument = new InlineKeyboardButton();
+            //chooseDocument.Text = "Документ";
+            //chooseDocument.CallbackData = "/getallfiles";
+            //buttons = new InlineKeyboardMarkup(chooseDocument);
 
             tgBot.OnMessage += TgBot_OnMessage;
             tgBot.StartReceiving();
-            
-            
+
+
 
             Console.ReadLine();
         }
 
-        
         public static void TgBot_OnMessage(object sender, Telegram.Bot.Args.MessageEventArgs e)
         {
 
             var chatId = e.Message.Chat.Id;
 
-            
+
             //Console.WriteLine($"Полученное сообщение: {text}");
             //await tgBot.SendTextMessageAsync(
             //    chatId: e.Message.Chat, 
@@ -39,7 +45,6 @@ namespace HomeWork09
             {
                 var messageText = e?.Message?.Text; if (messageText == null) return;
                 MessageHandler(chatId, messageText);
-                
             }
 
             if (e.Message.Type == Telegram.Bot.Types.Enums.MessageType.Document)
@@ -50,25 +55,30 @@ namespace HomeWork09
             }
             if (e.Message.Type == Telegram.Bot.Types.Enums.MessageType.Photo)
             {
-                DownloadDocumentOnLocalStorage(e.Message.Photo[e.Message.Photo.Length-1].FileId, e.Message.Photo[e.Message.Photo.Length - 1].FileId);
+                DownloadDocumentOnLocalStorage(e.Message.Photo[e.Message.Photo.Length - 1].FileId, e.Message.Photo[e.Message.Photo.Length - 1].FileId);
                 Console.WriteLine("Фото загружено");
             }
 
         }
 
-        
+
 
         /// <summary>
         /// Загрузка документа на локальное храниилище
         /// </summary>
         /// <param name="fileId"></param>
-        /// <param name="path"></param>
-        private static async void DownloadDocumentOnLocalStorage(string fileId, string path)
+        /// <param name="fileName"></param>
+        private static async void DownloadDocumentOnLocalStorage(string fileId, string fileName)
         {
-            var file = tgBot.GetFileAsync(fileId);
-            using (FileStream fs = new($@"Download\{path}", FileMode.Create))
+            var file = await tgBot.GetFileAsync(fileId);
+
+            if (!Directory.Exists(path))
             {
-                await tgBot.DownloadFileAsync(file.Result.FilePath, fs);
+                Directory.CreateDirectory(path);
+            }
+            using (FileStream fs = new(path + fileName, FileMode.Create))
+            {
+                await tgBot.DownloadFileAsync(file.FilePath, fs);
             }
         }
         /// <summary>
@@ -77,14 +87,21 @@ namespace HomeWork09
         /// <param name="chatId"></param>
         private static void GetAllFiles(long chatId)
         {
-            var localpath = @"Download";
-            var files = Directory.EnumerateFiles(localpath);
             var message = "Все доступные файлы:\n";
-            foreach (var file in files)
+
+            if (Directory.Exists(path))
             {
-                message += file.Remove(0, localpath.Length+1)+"\n";
-                
+                var files = Directory.EnumerateFiles(path);
+                foreach (var file in files)
+                {
+                    message += file.Remove(0, path.Length) + "\n";
+                }
             }
+            else
+            {
+                message += "ничего не найдено";
+            }
+
             tgBot.SendTextMessageAsync(chatId, message);
         }
 
@@ -102,7 +119,7 @@ namespace HomeWork09
         private static void MessageHandler(long userId, string userMessage)
         {
             Random r = new();
-            string [] greetingMessages = { "Привет", "Привет Привет", "Салют", "Я пришёл с миром" };
+            string[] greetingMessages = { "Привет", "Привет Привет", "Салют", "Я пришёл с миром" };
             string randomGreeting = greetingMessages[r.Next(greetingMessages.Length)];
             //var userGreeting = greetingMessages.Select(g => g == userMessage).ToString();
             //Console.WriteLine(userMessage);
@@ -119,7 +136,7 @@ namespace HomeWork09
             {
                 tgBot.SendTextMessageAsync(chatId: userId, randomGreeting);
             }
-            else 
+            else
             {
                 tgBot.SendTextMessageAsync(chatId: userId, "Не понял");
             }
